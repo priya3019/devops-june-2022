@@ -1,39 +1,52 @@
-node {
-   def mvnHome = tool 'M3'
-
-   stage('Checkout Code') { 
-      git 'https://github.com/maping/java-maven-calculator-web-app.git'
-   }
-   stage('Test Server') {
-      sh '''
-         docker run -it -d --rm -v maven_repo:/root/.m2 \
-            -v "$(pwd)":/app -w /app \
-            -p 9999:9999 \
-            --network maven \
-            --name jetty_container maven:3.8.6-openjdk-18-slim mvn jetty:run
-      '''
-   }
-   stage('Junit Test') {
-      sh '''
-         docker run -it --rm -v maven_repo:/root/.m2 \
-            -v "$(pwd)":/app -w /app \
-            --network maven maven:3.8.6-openjdk-18-slim mvn clean test 
-      '''
-   }
-
-   stage('Integration Test') {
-      sh '''
-         docker run -it --rm -v maven_repo:/root/.m2 \
-            -v "$(pwd)":/app -w /app \
-            --network maven maven:3.8.6-openjdk-18-slim mvn clean integration-test 
-      '''
-   }
-
-   stage('Build and Deploy') {
-      timeout(time: 10, unit: 'MINUTES') {
-           input message: 'Deploy this web app to production ?'
-      }
-      echo 'Deploy...'
-   }
+pipeline {
+agent none 
+stages {
+stage ('Git-Clone') {
+ agent {
+                label "master"
+            }
+steps {
+checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'priya3019-github', url: 'https://github.com/priya3019/devops-june-2022.git']]])
+sh 'pwd'
 }
-   
+
+
+}
+
+stage ('Build-Deploy') {
+ agent {
+                label "Docker-slave"
+            }
+steps {
+script {
+sh '''
+docker build -t priyappatil/ubuntu /home/ubuntu/devops-june-2022/Docker/app/maven/
+docker run -it --rm -d -p 8080:8080 --name calc priyappatil/ubuntu
+'''
+}
+
+}
+
+
+}
+
+stage ('push-docker-image') {
+ agent {
+                label "Docker-slave"
+            }
+steps {
+script {
+withCredentials([string(credentialsId: 'dockerhubid', variable: 'dockerhubpwd')]) {
+sh 'docker login -u priyappatil -p ${dockerhubpwd}'
+}
+
+sh 'docker push priyappatil/ubuntu:maven'
+}
+}
+}
+
+
+
+}
+}
+
