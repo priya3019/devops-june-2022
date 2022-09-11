@@ -1,10 +1,7 @@
 pipeline {
-agent none 
+agent any
 stages {
 stage ('Git-Clone') {
- agent {
-                label "master"
-            }
 steps {
 checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'priya3019-github', url: 'https://github.com/priya3019/devops-june-2022.git']]])
 sh 'pwd'
@@ -14,9 +11,6 @@ sh 'pwd'
 }
 
 stage ('Build-Deploy') {
- agent {
-                label "Docker-slave"
-            }
 steps {
 script {
 sh '''
@@ -31,9 +25,6 @@ docker run -it --rm -d -p 8080:8080 --name calc priyappatil/ubuntu
 }
 
 stage ('push-docker-image') {
- agent {
-                label "Docker-slave"
-            }
 steps {
 script {
 withCredentials([string(credentialsId: 'dockerhubid', variable: 'dockerhubpwd')]) {
