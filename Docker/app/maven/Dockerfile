@@ -1,12 +1,10 @@
 FROM maven AS BUILD
-WORKDIR /app
-COPY . /app
+WORKDIR /maven
+COPY . /maven
 COPY ./libraries /root/.m2
-RUN cd ./target; ls
-RUN mvn clean package -Dmaven.test.skip=true
+RUN mvn --version
+RUN mvn clean package
 
 FROM tomcat:8.0-alpine
-RUN rm -rf /usr/local/tomcat/webapps/ROOT
-COPY --from=BUILD /app/target/calculator.war /usr/local/tomcat/webapps/ROOT.war
-EXPOSE 8080
+COPY --from=BUILD /maven/target/calculator.war /usr/local/tomcat/webapps
 CMD ["catalina.sh","run"]
