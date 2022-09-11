@@ -14,7 +14,7 @@ stage ('Build-Deploy') {
 steps {
 script {
 sh '''
-docker build -t priyappatil/ubuntu /home/ubuntu/devops-june-2022/Docker/app/maven/
+docker build -t priyappatil/ubuntu /home/ubuntu/devops-june-2022/Docker/app/maven
 docker run -it --rm -d -p 8080:8080 --name calc priyappatil/ubuntu
 '''
 }
