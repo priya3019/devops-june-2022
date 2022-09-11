@@ -14,8 +14,8 @@ stage ('Build-Deploy') {
 steps {
 script {
 sh '''
-docker build -t priyappatil/maven1 /home/ubuntu/devops-june-2022/Docker/app/maven/
-docker run -it --rm -d -p 8082:8080 --name calci priyappatil/maven1
+sudo docker build -t priyappatil/ubuntu:maven /home/ubuntu/devops-june-2022/Docker/app/maven/
+docker run -it --rm -d -p 8080:8080 --name calc priyappatil/ubuntu:maven
 '''
 }
 
@@ -31,7 +31,7 @@ withCredentials([string(credentialsId: 'dockerhubid', variable: 'dockerhubpwd')]
 sh 'docker login -u priyappatil -p ${dockerhubpwd}'
 }
 
-sh 'docker push priyappatil/maven1'
+sh 'docker push priyappatil/ubuntu:maven'
 }
 }
 }
