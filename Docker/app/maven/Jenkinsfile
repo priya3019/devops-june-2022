@@ -1,9 +1,12 @@
 pipeline {
-agent any
+agent none 
 stages {
 stage ('Git-Clone') {
+ agent {
+                label "master"
+            }
 steps {
-checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'priya3019-github', url: 'https://github.com/priya3019/devops-june-2022.git']]])
+checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: '0b0351ac-0336-455b-a73e-ba63dca9249c', url: 'https://github.com/priya3019/devops-june-2022.git']]])
 sh 'pwd'
 }
 
@@ -11,11 +14,14 @@ sh 'pwd'
 }
 
 stage ('Build-Deploy') {
+ agent {
+                label "Docker-slave"
+            }
 steps {
 script {
 sh '''
-docker build -t priyappatil/alpine:maven /home/ubuntu/devops-june-2022/Docker/app/maven
-docker run -it --rm -d -p 8080:8080 --name calc priyappatil/alpine:maven
+docker build -t priyappatil/ubuntu:maven /home/ubuntu/devops-june-2022/Docker/app/maven/
+docker run -it --rm -d -p 8080:8080 --name calc priyappatil/ubuntu:maven
 '''
 }
 
@@ -25,13 +31,16 @@ docker run -it --rm -d -p 8080:8080 --name calc priyappatil/alpine:maven
 }
 
 stage ('push-docker-image') {
+ agent {
+                label "Docker-slave"
+            }
 steps {
 script {
-withCredentials([string(credentialsId: 'dockerhubid', variable: 'dockerhubpwd')]) {
+withCredentials([string(credentialsId: 'dockerhubpwd', variable: 'dockerhubpwd')]) {
 sh 'docker login -u priyappatil -p ${dockerhubpwd}'
 }
 
-sh 'docker push priyappatil/alpine:maven'
+sh 'docker push priyappatil/ubuntu:maven'
 }
 }
 }
